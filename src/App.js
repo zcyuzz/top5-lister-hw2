@@ -23,7 +23,7 @@ class App extends React.Component {
         // SETUP THE INITIAL STATE
         this.state = {
             currentList : null,
-            sessionData : loadedSessionData
+            sessionData : loadedSessionData,
         }
     }
     sortKeyNamePairsByName = (keyNamePairs) => {
@@ -40,7 +40,7 @@ class App extends React.Component {
 
         // MAKE THE NEW LIST
         let newList = {
-            key: newKey,
+            key: "" + newKey,
             name: newName,
             items: ["?", "?", "?", "?", "?"]
         };
@@ -49,7 +49,6 @@ class App extends React.Component {
         // SESSION DATA SO IT WILL BE IN OUR LIST OF LISTS
         let newKeyNamePair = { "key": newKey, "name": newName };
         let updatedPairs = [...this.state.sessionData.keyNamePairs, newKeyNamePair];
-        this.sortKeyNamePairsByName(updatedPairs);
 
         // CHANGE THE APP STATE SO THAT IT THE CURRENT LIST IS
         // THIS NEW LIST AND UPDATE THE SESSION DATA SO THAT THE
@@ -68,18 +67,9 @@ class App extends React.Component {
             // PUTTING THIS NEW LIST IN PERMANENT STORAGE
             // IS AN AFTER EFFECT
             this.db.mutationCreateList(newList);
+            this.db.mutationUpdateSessionData(this.state.sessionData)
         });
-        console.log(...this.state.sessionData.keyNamePairs, newKeyNamePair)
     }
-    renameItem = (key, index, newName) => {
-        let list = this.db.queryGetList(key);
-        list.items[index] = newName;
-        this.db.mutationUpdateList(list);
-
-        let newCurrentList = this.db.queryGetList(key);
-        this.setState({currentList: newCurrentList});
-    }
-    
     renameList = (key, newName) => {
         let newKeyNamePairs = [...this.state.sessionData.keyNamePairs];
         // NOW GO THROUGH THE ARRAY AND FIND THE ONE TO RENAME
@@ -113,6 +103,14 @@ class App extends React.Component {
             this.db.mutationUpdateSessionData(this.state.sessionData);
         });
     }
+    renameItem = (key, index, newName) => {
+        let list = this.db.queryGetList(key);
+        list.items[index] = newName;
+        this.db.mutationUpdateList(list);
+
+        let newCurrentList = this.db.queryGetList(key);
+        this.setState({currentList: newCurrentList});
+    }
     // THIS FUNCTION BEGINS THE PROCESS OF LOADING A LIST FOR EDITING
     loadList = (key) => {
         let newCurrentList = this.db.queryGetList(key);
@@ -139,16 +137,30 @@ class App extends React.Component {
         // DELETE AND MAKE THAT CONNECTION SO THAT THE
         // NAME PROPERLY DISPLAYS INSIDE THE MODAL
         this.hideDeleteListModal();
-        let keyToDelete = document.getElementById("delete-modal").getAttribute("value");
+        let keyToDelete = this.state.misc.key;
         console.log(keyToDelete);
+        let updatedPairs = this.state.sessionData.keyNamePairs;
+        delete updatedPairs["5"];
+        console.log(updatedPairs.flat());
 
+        // this.setState(prevState => ({
+        //     currentList: null,
+        //     sessionData: {
+        //         nextKey: prevState.sessionData.nextKey + 1,
+        //         counter: prevState.sessionData.counter + 1,
+        //         keyNamePairs: updatedPairs.flat()
+        //     }
+        // }), () => {
+        //     this.db.mutationDeleteList(this.db.queryGetList(keyToDelete));
+        //     this.db.mutationUpdateSessionData(this.state.sessionData);
+        // });
     }
     // THIS FUNCTION SHOWS THE MODAL FOR PROMPTING THE USER
     // TO SEE IF THEY REALLY WANT TO DELETE THE LIST
-    showDeleteListModal(key) {
+    showDeleteListModal = (keyNamePair) => {
+        this.setState({misc: keyNamePair});
         let modal = document.getElementById("delete-modal");
         modal.classList.add("is-visible");
-        modal.setAttribute("value", key);
     }
     // THIS FUNCTION IS FOR HIDING THE MODAL
     hideDeleteListModal() {
@@ -175,6 +187,7 @@ class App extends React.Component {
                 <Statusbar 
                     currentList={this.state.currentList} />
                 <DeleteModal
+                    listKeyPair={this.state.misc}
                     deleteListCallback={this.deleteList}
                     hideDeleteListModalCallback={this.hideDeleteListModal} />
             </div>
