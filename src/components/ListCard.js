@@ -54,7 +54,7 @@ export default class ListCard extends React.Component {
 
         if (this.state.editActive) {
             return (
-                <input
+                <input autoFocus
                     id={"list-" + keyNamePair.name}
                     className='list-card'
                     type='text'
