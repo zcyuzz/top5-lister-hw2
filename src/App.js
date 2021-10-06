@@ -40,7 +40,7 @@ class App extends React.Component {
 
         // MAKE THE NEW LIST
         let newList = {
-            key: "" + newKey,
+            key:  newKey,
             name: newName,
             items: ["?", "?", "?", "?", "?"]
         };
@@ -192,6 +192,9 @@ class App extends React.Component {
                     hideDeleteListModalCallback={this.hideDeleteListModal} />
             </div>
         );
+    }
+    newTransaction = (index,text)=>{
+        let old = this.state.currentList.items[index];
     }
 }
 
