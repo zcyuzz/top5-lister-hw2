@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-
+import jsTPS from './jsTPS';
 // IMPORT DATA MANAGEMENT AND TRANSACTION STUFF
 import DBManager from './db/DBManager';
 
@@ -14,6 +14,7 @@ import Statusbar from './components/Statusbar.js'
 class App extends React.Component {
     constructor(props) {
         super(props);
+        this.tps = new jsTPS();
         // THIS WILL TALK TO LOCAL STORAGE
         this.db = new DBManager();
 
@@ -25,6 +26,8 @@ class App extends React.Component {
             currentList : null,
             sessionData : loadedSessionData,
         }
+        
+        
     }
     sortKeyNamePairsByName = (keyNamePairs) => {
         keyNamePairs.sort((keyPair1, keyPair2) => {
@@ -70,6 +73,15 @@ class App extends React.Component {
             this.db.mutationUpdateSessionData(this.state.sessionData)
         });
     }
+    renameItem = (key, index, newName) => {
+        if(newName ==='') {newName = '?';}
+        let list = this.db.queryGetList(key);
+        list.items[index] = newName;
+        this.db.mutationUpdateList(list);
+
+        let newCurrentList = this.db.queryGetList(key);
+        this.setState({currentList: newCurrentList});
+    }
     renameList = (key, newName) => {
         let newKeyNamePairs = [...this.state.sessionData.keyNamePairs];
         // NOW GO THROUGH THE ARRAY AND FIND THE ONE TO RENAME
@@ -103,14 +115,6 @@ class App extends React.Component {
             this.db.mutationUpdateSessionData(this.state.sessionData);
         });
     }
-    renameItem = (key, index, newName) => {
-        let list = this.db.queryGetList(key);
-        list.items[index] = newName;
-        this.db.mutationUpdateList(list);
-
-        let newCurrentList = this.db.queryGetList(key);
-        this.setState({currentList: newCurrentList});
-    }
     // THIS FUNCTION BEGINS THE PROCESS OF LOADING A LIST FOR EDITING
     loadList = (key) => {
         let newCurrentList = this.db.queryGetList(key);
@@ -119,6 +123,8 @@ class App extends React.Component {
             sessionData: prevState.sessionData
         }), () => {
             // ANY AFTER EFFECTS?
+            this.enableButton('close-button');
+            this.disableButton('add-list-button');
         });
     }
     // THIS FUNCTION BEGINS THE PROCESS OF CLOSING THE CURRENT LIST
@@ -129,6 +135,8 @@ class App extends React.Component {
             sessionData: this.state.sessionData
         }), () => {
             // ANY AFTER EFFECTS?
+            this.enableButton("add-list-button");
+            this.disableButton("close-button");
         });
     }
     deleteList = () => {
@@ -172,7 +180,9 @@ class App extends React.Component {
             <div id="app-root">
                 <Banner 
                     title='Top 5 Lister'
-                    closeCallback={this.closeCurrentList} />
+                    closeCallback={this.closeCurrentList}
+                    undoCallback={this.undo}
+                    redoCallback={this.redo} />
                 <Sidebar
                     heading='Your Lists'
                     currentList={this.state.currentList}
@@ -193,8 +203,14 @@ class App extends React.Component {
             </div>
         );
     }
-    newTransaction = (index,text)=>{
-        let old = this.state.currentList.items[index];
+    disableButton(id) {
+        let button = document.getElementById(id);
+        button.classList.add("disabled");
+    }
+
+    enableButton(id) {
+        let button = document.getElementById(id);
+        button.classList.remove("disabled");
     }
 }
 

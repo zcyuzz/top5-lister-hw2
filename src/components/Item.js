@@ -15,9 +15,7 @@ export default class Item extends React.Component {
         }
     }
     handleToggleEdit = (event) => {
-        this.setState({
-            editActive: !this.state.editActive
-        });
+        this.setState({editActive: !this.state.editActive});
     }
     handleUpdate = (event) => {
         this.setState({ text: event.target.value });
